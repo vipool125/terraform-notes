@@ -1,0 +1,107 @@
+Terraform vs ARM vs Bicep — Which do I prefer and why?
+Feature	Terraform	Bicep	ARM Templates
+Cloud Support	⭐ Multi-cloud (AWS/Azure/GCP/K8s/VMware etc.)	❌ Azure Only	❌ Azure Only
+Syntax	Friendly HCL, modular	Friendly DSL, ARM-native	JSON — verbose + error-prone
+State Management	Yes (remote/local)	Yes (via Azure Resource Manager)	Yes (auto in ARM)
+Ecosystem	Huge modules registry	Growing	Limited
+Drift Detection	Full plan/apply	Good (Azure native)	Good
+Maturity	Very mature	Actively improving	Legacy / hard to maintain
+Preferred:
+👉 Terraform — because it’s multi-cloud, has a huge ecosystem, and is better for enterprise scale modularization.
+Bicep is great if:
+	• Azure-only
+	• Want first-party support + no external state backend
+ARM is mostly legacy now (Bicep replaces it).
+
+🧠 How does Terraform maintain state?
+Terraform keeps a record of the real-world infrastructure in a state file.
+📌 State maps configuration → actual resources
+	• Tracks resource IDs, metadata, dependency graph
+	• Detects drift + plans changes safely
+📌 Storage options:
+	• Local: terraform.tfstate
+	• Remote: S3 + DynamoDB lock, Azure Blob + leases, GCS + locking, Terraform Cloud
+📌 State locking prevents:
+	• two people from doing apply simultaneously → prevents race conditions
+Example (Azure remote state):
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate"
+    storage_account_name = "tfstateprod"
+    container_name       = "state"
+    key                  = "prod.tfstate"
+  }
+}
+
+💥 What happens if the Terraform state file gets corrupted?
+Terraform won’t know the current resource state → plan/apply may destroy/recreate incorrectly.
+Recovery strategy:
+	1. Backups — Terraform automatically stores previous state (*.backup)
+	2. Versioned backend — S3 versioning, Azure Blob soft-delete → restore correct version
+	3. terraform refresh → re-query cloud provider to rebuild missing state
+	4. Manual fix — terraform state commands (advanced)
+Worst case:
+	• Import critical infrastructure back into state:
+
+terraform import azurerm_storage_account.example /subscriptions/.../storageAccounts/xyz
+
+⚙️ Lifecycle Rules (Terraform Resource Lifecycle)
+Used for safe deployments + drift tolerance.
+create_before_destroy
+Avoid downtime when replacing resources (e.g. ASG, ALB):
+
+lifecycle {
+  create_before_destroy = true
+}
+ignore_changes
+When some fields are managed outside Terraform (autoscaling, Kubernetes):
+
+lifecycle {
+  ignore_changes = [
+    tags,
+    capacity,
+  ]
+}
+Other useful ones:
+	• prevent_destroy = true — protect critical resources (DBs)
+	• replace_triggered_by — force recreate on external dependency change
+
+🧩 Terraform Modules — Why & How?
+Modules = reusable infrastructure blocks.
+Why:
+	• Standardization + reusability
+	• Reduce copy/paste
+	• Enforce security + naming conventions
+	• Cleaner code + easier onboarding
+Structure:
+
+root/
+ ├─ main.tf
+ ├─ variables.tf
+ ├─ outputs.tf
+ └─ modules/
+     └─ vpc/
+         ├─ main.tf
+         ├─ variables.tf
+         └─ outputs.tf
+Usage example:
+
+module "vpc" {
+  source = "./modules/vpc"
+  cidr_block = "10.0.0.0/16"
+}
+You can also pull from Terraform Registry:
+
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
+}
+
+📌 Summary for Interview Answers
+Topic	One-liner
+TF vs Bicep vs ARM	Terraform = multi-cloud, Bicep = Azure-native, ARM = legacy
+State management	Maps config → cloud resources; enables plan/drift detection + locking
+State corruption	Restore backup/version → refresh/import to rebuild mapping
+Lifecycle rules	Control how Terraform creates/destroys and handles drift
+Modules	DRY, reusable, scalable IaC with consistent standards

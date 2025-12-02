@@ -1,0 +1,197 @@
+Managed a multi-environment infrastruture using  terraform module and terraform workspace
+
+Project: Multi-Environment Infrastructure Management on AWS using Terraform
+
+
+
+Ssh -public ip name
+
+
+What does .terraform directory contain
+
+Q.terrraform file typically hold the resource configuration>>main.tf
+
+
+
+
+Terrform state list
+
+Terraform  destroy --target (instancename ,securit-groups) specific is deleted
+
+Purpsose of the root_block_device_block
+
+
+Spot and on demand instance concept
+
+
+
+terraform apply -auto-approve
+
+terraform destroy -auto-approve
+
+
+resource "aws_instance" "web_servers" {
+  for_each = {
+    "web-front" = "t2.micro",
+    "web-back"  = "t3.small"
+  }
+  ami           = "ami-0c55b159cbfafe1f0" # Example AMI
+  instance_type = each.value
+  tags = {
+    Name = each.key
+  }
+}
+
+
+
+
+volume_size = var.env =="Prod" ? <1>:<2>
+var.env =="Prod" if this condition is true ,then condition1 is run otherwise 2 condirion is run
+
+
+
+
+
+
+
+
+Terraform state Management. 5+expe
+Terraform refresh>>state is replaced
+Terraform state list
+
+Terraform state key_pair
+
+
+
+
+If you want don’t maintain state of the any resource
+Terraform state rm option
+
+If any thing state existing on the aws ,but not in terraform 
+We can do this by import
+Terraform import aws_key_pair.my_key id
+
+
+
+Import resource like ec2,s3 from aws
+Add the key ,remove the and state >>do it >aws_key_pair
+
+
+
+##secure State management
+
+State file of the terraform we cant commit to the github
+
+State conflict 
+
+If aws have 3 count(instance) and terraform statefile have 2>>conflict (multiple stat file conflict)
+
+solution
+>common state file
+>remote backend s3
+Ie statefile locking>>dyanodb
+Lockstatelock
+File
+Lock and release mechanism through dyanomodb
+Only one lock id is generated >>no one can aceess the statefile
+
+>>remote backend+s3+dyanodb+Lock and release mechanism>>>only person can handle this s3 file
+
+
+Wheenver Im appplt the terraform along with there is backup file ie>>terraform.tfstate
+
+
+How to managed remote state backend in terrraform?
+Remote state locking
+State locking with dyanomodb
+
+
+Terraform workspace
+Terraform workspace: advanced level>>>environment specific terraform
+terraform workspace new dev
+Swithched to state
+>>terraform workspace select default
+
+
+Git and terraform integrate
+Default workspace mapped with master
+Make branch
+Git status
+Git checkout -b branch name(dev)
+Git add .
+Git commit -m "added terraform"
+Git status
+ 
+Project:1
+How to maintain/manage the multi-environment structure  on aws through terraform workspace >>dev ,prod ,staging(aws envronment )& git branching
+Creating and swtiching a workspaces>>terraform module app
+
+How to manage duplicate key pair
+
+Using terraform file, we can use git branch and terraform workspcace >>create a different envirinment
+
+Terraform state list
+
+
+
+
+Terraform modules
+Terraform locals
+https://registry.terraform.io/browse/modules
+
+
+Workspaces tag and environments by using modules we can build the multi-environment structure
+
+
+Project:- k8s cluster to make production ready  with multi envirnment (dev stage,production) with proper secure vpcs
+####we can create a kubernetes cluster using terraform on aws (eks-cluster),in that 3 ec2 instance node ,project
+3 nodes containing eks cluster>>deploying on cluster
+
+
+What happens if two resources are using the same state file but are managed by different terraform projects?
+
+How do you restrict access to a terraform state file>
+Locking the state file or encrypitng 
+
+
+Which approach is recommende for securely managing terraform state file(.tfstate) in a team. Envirinment?
+>>Using terraform cloud or remote backend like aws s3 with state locking
+
+
+Why is an s3 bucket commonly used to store the terraform state file
+To enable secure ,versioned and shared access  to the state file
+
+What is the primary purpose of state locking in terraform
+To avoid concurrnt operation that  currupt state file 
+
+
+
+Difference between provisioned and pay per request in aws dyanomodb
+
+How you can assign different name to multiple ec2 instances in terraform
+>.For_each 
+
+
+What is the purpose of the local block in terraform
+To store value that can be reused with configurations
+
+What is common cause of terraform state conflicts in a team envirnment?
+Multiple users modyfiing the same terraform state file simultaneously
+
+
+Q.How does terraform state block and release mechanism help in multi-user-envienrment
+
+It can be prevnets multiple users from making changes the state file as same time
+
+
+Proviosioners exec ,remote exec and userdata
+
+
+
+Solution
+Sort out the remote backend in the terraform
+
+
+
+
+Project: Multi-Environment Infrastructure Management on AWS using Terraform
